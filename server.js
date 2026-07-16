@@ -53,10 +53,12 @@ const ALLOWED_TABLES = new Set([
     'pengeluaran'
 ]);
 
-// Railway kadang menyediakan 2 variable: DATABASE_URL (private/internal,
-// cuma bisa diakses dari jaringan privat Railway) dan DATABASE_PUBLIC_URL
-// (bisa diakses dari luar). Kalau DATABASE_URL gagal/tidak ada, pakai yang public.
-const CONNECTION_STRING = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+// Railway kadang otomatis menyuntik DATABASE_URL (private/internal, cuma
+// bisa diakses dari jaringan privat Railway) walau kita pakai referensi ke
+// DATABASE_PUBLIC_URL secara eksplisit. Karena jaringan privat internal
+// kadang tidak resolve (ENOTFOUND postgres.railway.internal), di sini kita
+// utamakan DATABASE_PUBLIC_URL dulu (selalu bisa diakses lewat proxy publik).
+const CONNECTION_STRING = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
 
 if (!CONNECTION_STRING) {
     console.error('❌ ENV DATABASE_URL / DATABASE_PUBLIC_URL belum ada. Tambahkan plugin PostgreSQL di Railway lalu hubungkan variable-nya ke service ini.');
