@@ -53,13 +53,18 @@ const ALLOWED_TABLES = new Set([
     'pengeluaran'
 ]);
 
-if (!process.env.DATABASE_URL) {
-    console.error('❌ ENV DATABASE_URL belum ada. Tambahkan plugin PostgreSQL di Railway lalu hubungkan variable-nya ke service ini.');
+// Railway kadang menyediakan 2 variable: DATABASE_URL (private/internal,
+// cuma bisa diakses dari jaringan privat Railway) dan DATABASE_PUBLIC_URL
+// (bisa diakses dari luar). Kalau DATABASE_URL gagal/tidak ada, pakai yang public.
+const CONNECTION_STRING = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+
+if (!CONNECTION_STRING) {
+    console.error('❌ ENV DATABASE_URL / DATABASE_PUBLIC_URL belum ada. Tambahkan plugin PostgreSQL di Railway lalu hubungkan variable-nya ke service ini.');
 }
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway') ? { rejectUnauthorized: false } : (NODE_ENV === 'production' ? { rejectUnauthorized: false } : false)
+    connectionString: CONNECTION_STRING,
+    ssl: CONNECTION_STRING && (CONNECTION_STRING.includes('railway') || CONNECTION_STRING.includes('rlwy.net')) ? { rejectUnauthorized: false } : (NODE_ENV === 'production' ? { rejectUnauthorized: false } : false)
 });
 
 async function initDb() {
